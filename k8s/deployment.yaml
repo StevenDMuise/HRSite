@@ -17,6 +17,7 @@ spec:
       containers:
       - name: hr-service
         image: hr-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
         env:
