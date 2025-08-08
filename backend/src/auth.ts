@@ -5,10 +5,20 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'GOOGLE_CLIENT_ID';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'GOOGLE_CLIENT_SECRET';
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+
+// Store a stable user ID on the session user object for DynamoDB partitioning
+passport.serializeUser((user: any, done) => {
+  // Google profile.id is stable, use as userId
+  const sessionUser = {
+    id: user.id || user.sub || user.email || user.emails?.[0]?.value,
+    displayName: user.displayName,
+    provider: user.provider,
+    emails: user.emails,
+    photos: user.photos,
+  };
+  done(null, sessionUser);
 });
-passport.deserializeUser((obj: Express.User, done) => {
+passport.deserializeUser((obj: any, done) => {
   done(null, obj);
 });
 

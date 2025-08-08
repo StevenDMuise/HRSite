@@ -16,6 +16,8 @@ passport.use(new OIDCStrategy({
   scope: ['profile', 'email', 'openid'],
   passReqToCallback: false,
 }, (iss: any, sub: any, profile: any, accessToken: any, refreshToken: any, done: any) => {
+  // Microsoft profile.oid is stable, use as userId
+  profile.id = profile.oid || profile.id || profile.sub || profile.email || profile.emails?.[0]?.value;
   return done(null, profile);
 }));
 

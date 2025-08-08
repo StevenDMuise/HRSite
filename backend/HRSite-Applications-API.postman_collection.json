@@ -1,0 +1,73 @@
+{
+  "info": {
+    "_postman_id": "b7e2e7e2-8c2e-4e7a-9b2e-hrsite-apps-api",
+    "name": "HRSite Applications API (Local)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Applications",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Cookie", "value": "{{session_cookie}}", "type": "text" }
+        ],
+        "url": { "raw": "http://localhost:3000/applications", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["applications"] }
+      }
+    },
+    {
+      "name": "Create Application",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Cookie", "value": "{{session_cookie}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"company\": \"Acme Corp\",\n  \"position\": \"Engineer\",\n  \"status\": \"applied\"\n}"
+        },
+        "url": { "raw": "http://localhost:3000/applications", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["applications"] }
+      }
+    },
+    {
+      "name": "Get Application by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Cookie", "value": "{{session_cookie}}", "type": "text" }
+        ],
+        "url": { "raw": "http://localhost:3000/applications/{{app_id}}", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["applications", "{{app_id}}"] }
+      }
+    },
+    {
+      "name": "Update Application",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Cookie", "value": "{{session_cookie}}", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"interviewing\"\n}"
+        },
+        "url": { "raw": "http://localhost:3000/applications/{{app_id}}", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["applications", "{{app_id}}"] }
+      }
+    },
+    {
+      "name": "Delete Application",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Cookie", "value": "{{session_cookie}}", "type": "text" }
+        ],
+        "url": { "raw": "http://localhost:3000/applications/{{app_id}}", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["applications", "{{app_id}}"] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "session_cookie", "value": "" },
+    { "key": "app_id", "value": "" }
+  ]
+}

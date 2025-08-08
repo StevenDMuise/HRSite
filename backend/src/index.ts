@@ -1,5 +1,5 @@
 
-
+import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import passport from './auth';
@@ -59,6 +59,16 @@ function ensureAuthenticated(req: any, res: any, next: any) {
 
 app.use('/applications', ensureAuthenticated, applicationsRouter);
 
-app.listen(port, () => {
+
+const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+});
+
+server.on('error', (err: any) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${port} is already in use. Please free the port or use a different one.`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
 });
