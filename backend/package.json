@@ -10,11 +10,16 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.862.0",
     "@aws-sdk/lib-dynamodb": "^3.862.0",
+    "@types/cors": "^2.8.19",
+    "@types/passport-microsoft": "^2.1.0",
+    "aws-sdk": "^2.1692.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
     "express-session": "^1.18.2",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "passport-microsoft": "^2.1.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.152",

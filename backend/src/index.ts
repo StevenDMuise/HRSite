@@ -2,61 +2,56 @@
 import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
+import cors from 'cors';
 import passport from './auth';
-import './auth-microsoft';
+import authRoutes from './auth-routes';
 import applicationsRouter from './applications';
-
 
 const app = express();
 const port = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8080';
+
+// Configure CORS
+app.use(cors({
+  origin: ['http://localhost:8080', FRONTEND_URL],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
+}));
 
 app.use(express.json());
+
+// Configure session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'devsecret',
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    secure: false, // Set to true only in production with HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax'
+  }
 }));
+
+// Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Health check endpoint
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/', (_req, res) => {
-  res.send('<h1>Application Tracker Backend</h1><p>API is running.</p>');
-});
-
-
-// Google OAuth routes
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    res.redirect('/');
-  }
-);
-
-// Microsoft OAuth routes
-app.get('/auth/microsoft', passport.authenticate('azuread-openidconnect', { scope: ['profile', 'email', 'openid'] }));
-app.get('/auth/microsoft/callback',
-  passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
-  (req, res) => {
-    res.redirect('/');
-  }
-);
-
-app.get('/logout', (req, res) => {
-  req.logout(() => {
-    res.redirect('/');
-  });
-});
-
-function ensureAuthenticated(req: any, res: any, next: any) {
+// Authentication middleware
+const ensureAuthenticated = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (req.isAuthenticated()) return next();
   res.status(401).json({ error: 'Unauthorized' });
-}
+};
 
+// Routes
+app.use('/auth', authRoutes);
 app.use('/applications', ensureAuthenticated, applicationsRouter);
 
 

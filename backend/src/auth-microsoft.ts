@@ -1,24 +1,22 @@
 import passport from 'passport';
-import { OIDCStrategy } from 'passport-azure-ad';
+import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID || '';
 const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET || '';
-const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || 'common';
 
-passport.use(new OIDCStrategy({
-  identityMetadata: `https://login.microsoftonline.com/${MICROSOFT_TENANT_ID}/v2.0/.well-known/openid-configuration`,
+passport.use(new MicrosoftStrategy({
   clientID: MICROSOFT_CLIENT_ID,
   clientSecret: MICROSOFT_CLIENT_SECRET,
-  responseType: 'code',
-  responseMode: 'query',
-  redirectUrl: 'http://localhost:3000/auth/microsoft/callback',
-  allowHttpForRedirectUrl: true,
-  scope: ['profile', 'email', 'openid'],
-  passReqToCallback: false,
-}, (iss: any, sub: any, profile: any, accessToken: any, refreshToken: any, done: any) => {
-  // Microsoft profile.oid is stable, use as userId
-  profile.id = profile.oid || profile.id || profile.sub || profile.email || profile.emails?.[0]?.value;
-  return done(null, profile);
+  callbackURL: 'http://localhost:3000/auth/microsoft/callback',
+  scope: ['user.read'],
+}, async (accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: any) => void) => {
+  try {
+    // Ensure stable ID
+    profile.id = profile.id || profile.sub || profile.email || profile.emails?.[0]?.value;
+    return done(null, profile);
+  } catch (error) {
+    return done(error);
+  }
 }));
 
 export default passport;
