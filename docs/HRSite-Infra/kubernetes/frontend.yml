@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hrsite-frontend
+  namespace: hrsite
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hrsite-frontend
+  template:
+    metadata:
+      labels:
+        app: hrsite-frontend
+    spec:
+      containers:
+      - name: hrsite-frontend
+        image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hrsite-frontend
+  namespace: hrsite
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  selector:
+    app: hrsite-frontend

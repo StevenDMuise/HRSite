@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hrsite-backend
+  namespace: hrsite
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hrsite-backend
+  template:
+    metadata:
+      labels:
+        app: hrsite-backend
+    spec:
+      containers:
+      - name: hrsite-backend
+        image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+        ports:
+        - containerPort: 3001
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hrsite-backend
+  namespace: hrsite
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3001
+    targetPort: 3001
+    protocol: TCP
+  selector:
+    app: hrsite-backend
