@@ -1,4 +1,4 @@
-name: Deploy Frontend to AWS
+name: Deploy Frontend to AWS EKS
 
 on:
   push:
@@ -11,8 +11,9 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: hrsite-frontend
-  ECS_CLUSTER: hrsite-cluster
-  ECS_SERVICE: hrsite-frontend-service
+  EKS_CLUSTER: hrsite-cluster
+  NAMESPACE: hrsite
+  DEPLOYMENT_NAME: hrsite-frontend
 
 permissions:
   id-token: write
@@ -46,6 +47,13 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Update ECS service
+      - name: Update kube config
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER }}
+
+      - name: Deploy to EKS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
+          kubectl set image deployment/$DEPLOYMENT_NAME $DEPLOYMENT_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -n $NAMESPACE
+          kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE
