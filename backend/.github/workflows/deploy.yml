@@ -11,7 +11,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: hrsite-backend
-  EKS_CLUSTER: hrsite-cluster
+  EKS_CLUSTER: hrsite-cluster-dev
   NAMESPACE: hrsite
   DEPLOYMENT_NAME: hrsite-backend
 

@@ -55,26 +55,21 @@ resource "aws_iam_role_policy_attachment" "eks_container_registry" {
 }
 
 # EKS Cluster
-resource "aws_eks_cluster" "main" {
-  name     = "hrsite-cluster"
+resource "aws_eks_cluster" "dev" {
+  depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
+
+  name     = "hrsite-cluster-dev"
   role_arn = aws_iam_role.eks_cluster.arn
-  version  = "1.28"
 
   vpc_config {
-    subnet_ids              = concat(aws_subnet.private_subnets[*].id, aws_subnet.public_subnets[*].id)
-    endpoint_public_access  = true
-    endpoint_private_access = true
-    security_group_ids      = [aws_security_group.eks_cluster.id]
+    subnet_ids = aws_subnet.private_subnets[*].id
+    security_group_ids = [aws_security_group.eks_cluster.id]
   }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy
-  ]
 }
 
 # EKS Node Group
 resource "aws_eks_node_group" "main" {
-  cluster_name    = aws_eks_cluster.main.name
+  cluster_name    = aws_eks_cluster.dev.name
   node_group_name = "hrsite-node-group"
   node_role_arn   = aws_iam_role.eks_nodes.arn
   subnet_ids      = aws_subnet.private_subnets[*].id
@@ -120,9 +115,9 @@ resource "aws_security_group" "eks_cluster" {
 
 # Output the EKS cluster endpoint and certificate
 output "cluster_endpoint" {
-  value = aws_eks_cluster.main.endpoint
+  value = aws_eks_cluster.dev.endpoint
 }
 
 output "cluster_ca_certificate" {
-  value = aws_eks_cluster.main.certificate_authority[0].data
+  value = aws_eks_cluster.dev.certificate_authority[0].data
 }
