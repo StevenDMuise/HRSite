@@ -1,0 +1,66 @@
+name: Deploy Frontend to Production EKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmDeploy:
+        description: 'Confirm deployment to production'
+        required: true
+        type: boolean
+      deployTag:
+        description: 'Tag to deploy (default: latest successful dev deployment)'
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: hrsite-frontend
+  EKS_CLUSTER: hrsite-cluster-prod
+  NAMESPACE: hrsite
+  DEPLOYMENT_NAME: hrsite-frontend-prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Frontend to Production
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirmDeploy == 'true'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set Image Tag
+        run: |
+          if [ -n "${{ github.event.inputs.deployTag }}" ]; then
+            echo "IMAGE_TAG=${{ github.event.inputs.deployTag }}" >> $GITHUB_ENV
+          else
+            # Get the latest successful dev deployment tag
+            LATEST_TAG=$(aws ecr describe-images --repository-name $ECR_REPOSITORY --query 'imageDetails[?!contains(imageTags[],`prod-`)]|[?imagePushedAt!=`null`]|[0].imageTags[0]' --output text)
+            echo "IMAGE_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          fi
+
+      - name: Update kube config
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER }}
+
+      - name: Deploy to Production EKS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          echo "Deploying image $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG to production"
+          kubectl set image deployment/$DEPLOYMENT_NAME $DEPLOYMENT_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -n $NAMESPACE
+          kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE
