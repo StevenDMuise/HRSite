@@ -11,7 +11,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 
 # IAM Role for GitHub Actions
 resource "aws_iam_role" "github_actions" {
-  name = "github-actions-hrsite-dev"
+  name = "github-actions-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -46,13 +46,24 @@ resource "aws_iam_role_policy" "github_actions" {
           "cloudformation:*",
           "ecs:*",
           "ecr:*",
+          "eks:*",
           "s3:*",
           "cloudfront:*",
           "vpc:*",
           "ec2:*",
           "elasticloadbalancing:*",
           "iam:PassRole",
-          "logs:*"
+          "iam:GetRole",
+          "iam:CreateRole",
+          "iam:AttachRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:ListInstanceProfilesForRole",
+          "logs:*",
+          "sts:AssumeRole",
+          "sts:GetCallerIdentity",
+          "dynamodb:*",
+          "autoscaling:*",
+          "application-autoscaling:*"
         ]
         Resource = "*"
       }
@@ -89,9 +100,14 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
   }
 }
 
-# ECR Repository
+# ECR Repository for backend
 resource "aws_ecr_repository" "backend" {
   name = "hrsite-backend"
+}
+
+# ECR Repository for frontend
+resource "aws_ecr_repository" "frontend" {
+  name = "hrsite-frontend"
 }
 
 # CloudFront Distribution
@@ -167,6 +183,14 @@ output "cloudfront_distribution_id" {
 
 output "account_id" {
   value = data.aws_caller_identity.current.account_id
+}
+
+output "backend_ecr_repository_url" {
+  value = aws_ecr_repository.backend.repository_url
+}
+
+output "frontend_ecr_repository_url" {
+  value = aws_ecr_repository.frontend.repository_url
 }
 
 # Get current AWS account ID
