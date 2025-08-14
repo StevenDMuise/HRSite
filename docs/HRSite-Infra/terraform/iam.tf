@@ -58,12 +58,18 @@ resource "aws_iam_role_policy" "github_actions" {
           "iam:AttachRolePolicy",
           "iam:PutRolePolicy",
           "iam:ListInstanceProfilesForRole",
+          "iam:ListRolePolicies",
+          "iam:GetOpenIDConnectProvider",
+          "iam:CreateOpenIDConnectProvider",
+          "iam:TagOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint",
           "logs:*",
           "sts:AssumeRole",
           "sts:GetCallerIdentity",
           "dynamodb:*",
           "autoscaling:*",
-          "application-autoscaling:*"
+          "application-autoscaling:*",
+          "kms:*"
         ]
         Resource = "*"
       }
